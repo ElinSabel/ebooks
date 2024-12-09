@@ -23,5 +23,5 @@ mongoose.connect(
 )
 
 // Listen to server
-app.listen(process.env.PORT || 5001); //Listen through port 5001
+app.listen(process.env.PORT || 5000); //Listen through port 5000
 
