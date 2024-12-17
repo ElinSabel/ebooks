@@ -1,26 +1,40 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Product = require('../models/Product');
-
-// GET all products or search by name : eg. http://localhost:5001/products?name=prince
+ 
+// GET products with optional filtering by name and category, http://localhost:5001/products?_id=''&name=''&categories='','(om man vill ha flera categorier)'
 router.get('/', async (req, res) => {
     try {
-        const { name } = req.query;  // Extract the search parameter from the query string
-        let products;
-
-        if (name) {
-            // If a search name is provided, find products matching the name (case-insensitive)
-            products = await Product.find({ name: { $regex: name, $options: 'i' } });
-        } else {
-            // If no search parameter, return all products
-            products = await Product.find();
+        const { _id, name, categories } = req.query;
+        const filter = {};
+ 
+        // Filter by name
+        if (_id) {
+            if (mongoose.Types.ObjectId.isValid(_id)) {
+                filter._id = _id; // Ensure it's a valid ObjectId before filtering
+            } else {
+                return res.status(400).json({ message: 'Invalid _id format.' });
+            }
         }
-
-        res.status(200).json(products); // Send response with products
+        if (name) {
+            filter.name = { $regex: name, $options: 'i' };
+        }
+ 
+        // Filter by categories (handling arrays)
+        if (categories) {
+            const categoriesArray = categories.split(','); // Split by comma for multiple categories
+            filter.categories = { $in: categoriesArray.map(cat => new RegExp(cat, 'i')) }; // Case-insensitive
+        }
+ 
+        const products = await Product.find(filter);
+        res.status(200).json(products);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error fetching products:', error.message);
+        res.status(500).json({ message: 'Server Error: ' + error.message });
     }
 });
+ 
 
 // GET the choosen category 
 /* router.get('/category/:category', async (req, res) => {
