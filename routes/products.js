@@ -1,5 +1,5 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); // added mongoose since it search for its ObjectID
 const router = express.Router();
 const Product = require('../models/Product');
  
@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
         const { _id, name, categories } = req.query;
         const filter = {};
  
-        // Filter by name
+        // Filter by ID
         if (_id) {
             if (mongoose.Types.ObjectId.isValid(_id)) {
                 filter._id = _id; // Ensure it's a valid ObjectId before filtering
@@ -17,6 +17,7 @@ router.get('/', async (req, res) => {
                 return res.status(400).json({ message: 'Invalid _id format.' });
             }
         }
+        // Filter by Name, non sensetive to case
         if (name) {
             filter.name = { $regex: name, $options: 'i' };
         }
@@ -35,15 +36,5 @@ router.get('/', async (req, res) => {
     }
 });
  
-
-// GET the choosen category 
-/* router.get('/category/:category', async (req, res) => {
-    // res.json(({message: req.params.category}))
-    try {
-        res.json(await Product.find(req.params.productId));
-    } catch(error) {
-        res.json({message: error});
-    }
-}); */
 
 module.exports = router;
